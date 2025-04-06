@@ -53,4 +53,95 @@ const addBookHandler = (request, h) => {
   };
   //   push
   books.push(newBook);
+  //   cek apakah berhasil di pushe
+  const isSuccess = books.filter((book) => book.id === id).length > 0;
+
+  if (isSuccess){
+  //   jika berhasil push
+
+    const response = h.response({
+      status: 'success',
+      message: 'Buku berhasil ditambahkan',
+      data : {
+        bookId: id,
+      },
+    });
+    response.code(201);
+    return response;
+  }
+
+  //   apabila gagal ditambahkan
+  const response = h.response({
+    status: 'fail',
+    message: 'Buku gagal ditambahkan'
+  });
+  response.code(500);
+  return response;
+};
+
+//! Menampilkan semua buku
+const getAllBooksHandler = (request, h) => {
+  const {
+    name,
+    reading,
+    finished
+  } = request.query;
+
+  let filteredBooks = books;
+
+  //   filter by name
+  if (name){
+    filteredBooks = filteredBooks.filter((book) =>
+      book.name.toLowerCase().includes(name.toLowerCase())
+    );
+  }
+  //   filter berdasarkan reading (pastikan query string "0"/"1" dikonversi ke boolean)
+  if (reading !== undefined) {
+    const isReading = reading === '1';
+    filteredBooks = filteredBooks.filter((book)=> book.reading === isReading);
+  }
+
+  //   filter berdasarkan finished
+  if (finished !== undefined) {
+    const isFinisihed = finished === '1';
+    filteredBooks = filteredBooks.filter((book)=> book.finished === isFinisihed);
+  }
+
+  //   hanya mengambil proferti yang dibutuhkan
+  const booksResponse = filteredBooks.map((book)=> ({
+    id: book.id,
+    name: book.name,
+    publisher: book.publisher,
+  }));
+
+  const response = h.response({
+    status: 'success',
+    data: {
+      books: booksResponse,
+    },
+  });
+  response.code(200);
+  return response;
+
+};
+
+// Menampilkan detail buku
+
+const getBookByIdHandler = (request, h) => {
+  const { bookId } = request.params;
+  const book = books.find((b)=> b.id === bookId);
+
+  if (!book) {
+    return h.response({
+      status: 'fail',
+      message: 'Buku tidak ditemukan'
+    }).code(404);
+  }
+
+  return h.response({
+    status: 'success',
+    data: {
+      book
+    }
+  }).code(200);
 };
